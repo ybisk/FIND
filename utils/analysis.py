@@ -9,16 +9,6 @@ from utils.data_processing import *
 ###############################################################################
 ##    Functions for evaluation and visualization
 ###############################################################################
-
-def pretty(config):
-  run = str(int(time.time()))
-  run += "_binary" if config.binary is not None else "_multi"
-  run += "_{}_e{}_h{}_b{}".format(config.name, config.epochs, 
-                                  config.hidden_dim, config.batch_size)
-  if config.reweight:
-      run += "_reweight"
-  return run
-
 def run_evaluation(net, v_inputs, v_outputs, v_strings = [], 
                    aggregate=False, verbose=False, showTrain=True):
     net.train(mode=False)
