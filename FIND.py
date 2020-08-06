@@ -10,11 +10,11 @@ from collections import defaultdict
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--type", type=str, default="HCO", description="HCO, NITRO, BD")
+parser.add_argument("--type", type=str, default="HCO", help="HCO, NITRO, BD")
 parser.add_argument("--epochs", type=int, default=100)
+parser.add_argument("--batch_size", type=int, default=32)
+parser.add_argument("--hidden_dim", type=int, default=256)
 parser.add_argument("--lr", type=float)
-parser.add_argument("--batch_size", type=int)
-parser.add_argument("--hidden_dim", type=int)
 parser.add_argument("--evaluate", action='store_true')
 parser.add_argument("--test", action='store_true')
 parser.add_argument("--model", type=str)
@@ -30,14 +30,12 @@ from utils.model import Net
 # Helper functions for running evaluation and visualization
 from utils.analysis import *           
 
-# Helper functions for converting strings to ints and sorting/padding data
-from utils.data_processing import *
-
 # Choose from configs.[bd, hco, nitro] or make your own
 from config import config
 config = config(args)
 
 # Data
+from data import data
 data = data(config, test=args.test)
 
 # Model
@@ -61,12 +59,12 @@ if not args.evaluate:
           # Setup
           optimizer.zero_grad()
           inputs = inps.to(config.device)
-          labels = outs.to(device)
+          labels = outs.to(config.device)
   
           # Predict
           net.train(mode=True)
           logits, att, full = net(inputs)
-          ce_loss = net.loss(logits, labels, weight=config.weight)
+          ce_loss = net.loss(logits, labels, weight=data.weight)
   
           # Compute loss and update
           loss = ce_loss
@@ -96,7 +94,7 @@ if not args.evaluate:
       if val_acc > prev_acc:
           prev_acc = val_acc
           pref = config.name
-          torch.save(net, "{}.model".format(run_name))
+          torch.save(net, "{}.model".format(config.run_name))
       
       if abs(prev_loss - total_loss)/total_loss < 0.01:
           print("Converged")

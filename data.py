@@ -1,5 +1,7 @@
+import torch
 import numpy as np
 from torch.utils.data import DataLoader
+from collections import defaultdict
 
 class data:
   def __init__(self, config, test=False):
@@ -15,7 +17,7 @@ class data:
       self.valid = [line.strip().split() for line in open(config.validation,'r')]
 
     # Sanity check formatting of the input data
-    for vals in train:
+    for vals in self.train:
         if len(vals) != 2:
             print("Problem: " + vals)
             sys.exit()
@@ -26,26 +28,26 @@ class data:
     print("Training counts\t")
     l_c = defaultdict(int) 
     for v in outputs:
-        l_c[ilbls[v]] += 1
+        l_c[config.ilbls[v]] += 1
     V = [(l_c[v],v) for v in l_c]
     V.sort()
     V.reverse()
     print("    ".join(["{}: {}".format(lbl, cnt) for cnt,lbl in V]))
 
-    count = np.zeros(len(ilbls), dtype=np.float32)
+    count = np.zeros(len(config.ilbls), dtype=np.float32)
 
-    for v in range(len(ilbls)):
-        if ilbls[v] in l_c:
-            count[v] += l_c[ilbls[v]]
+    for v in range(len(config.ilbls)):
+        if config.ilbls[v] in l_c:
+            count[v] += l_c[config.ilbls[v]]
     distr = np.sum(count)/(np.size(count)*count) #1. - count/np.sum(count)
-    weight = torch.from_numpy(100*distr).to(device)
+    self.weight = torch.from_numpy(100*distr).to(config.device)
 
     inps, outs, strs = self.sort_data(inputs, outputs, strs)
     outs = np.array(outs)
     strs = np.array(strs)
 
     # Build Validation Data
-    t_strs, t_inps, t_outs = self.process(self.valid, acids, lbls)
+    t_strs, t_inps, t_outs = self.process(self.valid, config.acids, config.lbls)
     #t_inps, t_outs, t_strs = self.sort_data(t_inps, t_outs, t_strs)
     #t_outs = np.array(t_outs)
     #t_strs = np.array(t_strs)
@@ -54,10 +56,10 @@ class data:
     print("Training    Outs: ", outputs.shape)
     print("Validation  Inps: ", len(t_inps))
     print("Validation  Outs: ", t_outs.shape)
-    print("Labels\t",lbls)
+    print("Labels\t", config.lbls)
 
-    self.training = DataLoader(zip(inputs, outputs, strs), shuffle=True)
-    self.validate = DataLoader(zip(t_inps, t_outs, tstrs), shuffle=False)
+    self.training = DataLoader(list(zip(inputs, outputs, strs)), shuffle=True)
+    self.validate = DataLoader(list(zip(t_inps, t_outs, t_strs)), shuffle=False)
 
 
   ##############################################################################
@@ -69,11 +71,11 @@ class data:
 
   def process(self, data, acids, lbls):
       strs = np.array([sequence for label, sequence in data])
-      inps = [to_int(sequence, acids) for label, sequence in data]
+      inps = [self.to_int(sequence, acids) for label, sequence in data]
       outs = np.array([lbls[label] for label, sequence in data])
       return strs, inps, outs
 
-  def to_int(seq, acids):
+  def to_int(self, seq, acids):
       """   Map AA sequence to integers  """
       seq = seq.replace("*","")
       conv = []
