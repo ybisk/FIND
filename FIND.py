@@ -116,5 +116,5 @@ else:
   net.to(config.device)
 
   # Run evaluation with best validation model on test
-  loss, acc = run_evaluation(net, data.validate)
+  loss, acc, _ = run_evaluation(net, data.validate)
   print("Acc: {:5.3f}".format(acc))
