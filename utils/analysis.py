@@ -8,8 +8,9 @@ import torch.nn.functional as F
 ###############################################################################
 ##    Functions for evaluation and visualization
 ###############################################################################
-def run_evaluation(net, v_inputs, v_outputs, v_strings = [], 
-                   aggregate=False, verbose=False, showTrain=True):
+def run_evaluation(net, validate, 
+                   aggregate=False):
+
     net.train(mode=False)
     net.top_predictor = []
     net.predictors = defaultdict(int)
@@ -25,40 +26,32 @@ def run_evaluation(net, v_inputs, v_outputs, v_strings = [],
     if net.config.confusion:
         pairs = np.zeros((net.config.num_labels, net.config.num_labels))
 
-    v_inps, v_outs, v_strs = sort_data(v_inputs, v_outputs, v_strings)
-    v_outs = np.array(v_outs)
-    v_strs = np.array(v_strs)
-    batches = []
-    indices = list(range(len(v_inps)))
-    for start in range(0, len(indices), net.config.batch_size):
-        batches.append((start, min(net.config.batch_size, len(indices)-start)))
+    for datum in  tqdm(validate, ncols=80):
+        inps, lens, outs, strs = datum
+        inps = inps.to(net.config.device)
+        outs = outs.to(net.config.device)
+        b_size = len(inps)
 
-    for start, b_size in tqdm(batches, ncols=80):
-        vals = indices[start : start + b_size]
+        logits, att, full = net(inps)
 
-        inputs = torch.from_numpy(pad_data(
-                                  v_inps[indices[start]:
-                                  indices[start+b_size-1]+1])).to(net.config.device)
-        labels = torch.from_numpy(v_outs[vals]).to(net.config.device)
-        logits, att, full = net(inputs)
-
-        val_loss += F.cross_entropy(logits, labels).item()
+        val_loss += F.cross_entropy(logits, outs).item()
         _, preds = torch.max(logits, 1)
 
         preds = preds.data.cpu().numpy()
-        val_acc.extend(list((preds == v_outs[vals])))
+        outs = outs.data.cpu().numpy()
+        val_acc.extend(list((preds == outs)))
 
         np.add.at(pred_counts, preds, 1)
-        np.add.at(gold_counts, v_outs[vals], 1)
-        np.add.at(corr_counts, preds[(preds == v_outs[vals])], 1)
+        np.add.at(gold_counts, outs, 1)
+        np.add.at(corr_counts, preds[(preds == outs)], 1)
 
         if net.config.confusion:
             if not net.config.pconfusion:
-                np.add.at(pairs, [v_outs[vals], preds], 1)
+                np.add.at(pairs, [outs[vals], preds], 1)
             else:
                 dists = F.softmax(logits, -1)
                 for i in range(len(vals)):
-                    gold = v_outs[vals][i]
+                    gold = outs[vals][i]
 
                     tmp = [(dists[i,j], j) for j in range(len(net.config.ilbls))]
                     tmp.sort()
@@ -66,15 +59,7 @@ def run_evaluation(net, v_inputs, v_outputs, v_strings = [],
                     pairs[gold, second] += 1
 
         if aggregate:
-            aggregate_predictors(net, v_strs[vals], v_outs[vals], full, att)
-
-    if verbose:
-        if aggregate or not showTrain:
-            print_eval(net.config, (gold_counts, pred_counts, corr_counts))
-        else:
-            print_eval(net.config, 
-                       (net.gold_counts, net.pred_counts, net.corr_counts), 
-                       (gold_counts, pred_counts, corr_counts))
+            aggregate_predictors(net, strs, outs, full, att)
 
     if net.config.confusion:
         out = open("confusion.csv", 'w')
@@ -86,7 +71,7 @@ def run_evaluation(net, v_inputs, v_outputs, v_strings = [],
                 out.write("{},".format(pairs[i,j]))
             out.write("\n")
         out.close()
-    return val_loss, 100*np.array(val_acc).mean()
+    return val_loss, 100*np.array(val_acc).mean(), (gold_counts, pred_counts, corr_counts)
 
 def aggregate_predictors(net, seqs, outs, full, att):
     dists = F.softmax(full.permute(0, 2, 1), dim=-1)

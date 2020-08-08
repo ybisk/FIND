@@ -18,8 +18,7 @@ class Net(nn.Module):
         self.RF = RF
         self.config = config
     
-        self.embedding = nn.Embedding(config.input_dim, config.hidden_dim)
-        self.embedding.weight.data[0] = torch.zeros(config.hidden_dim)
+        self.embedding = nn.Embedding(config.input_dim, config.hidden_dim, padding_idx=0)
         layers = [
           nn.Conv1d(config.hidden_dim, config.hidden_dim, self.width),
           nn.ReLU(),

@@ -91,8 +91,9 @@ if not args.evaluate:
           train_acc.extend(list(preds == outs.numpy()))
     
       # Evaluate on validation (during training)
-      val_loss, val_acc = run_evaluation(net, data.validate, 
-                          verbose=(epoch % 10 == 0 or epoch == config.epochs))
+      val_loss, val_acc, val_counts = run_evaluation(net, data.validate)
+      if epoch % 10 == 0 or epoch == config.epochs:
+          print_eval(net.config, (gold_counts, pred_counts, corr_counts), val_counts)
   
       print("Epoch: {}  Train Loss: {:8.4f}  Acc: {:5.2f}  Val  Loss {:8.4f}  Acc: {:5.2f}".format(epoch, 
             total_loss, 100*np.array(train_acc).mean(), val_loss, val_acc))
@@ -115,5 +116,5 @@ else:
   net.to(config.device)
 
   # Run evaluation with best validation model on test
-  loss, acc = run_evaluation(net, data.validate, showTrain=False, verbose=True)
+  loss, acc = run_evaluation(net, data.validate)
   print("Acc: {:5.3f}".format(acc))
