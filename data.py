@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from random import shuffle
 from torch.utils.data import DataLoader
 from collections import defaultdict
 
@@ -11,10 +12,13 @@ class data:
     ############################################################################
     """ Data & Parameters """
     self.train = [line.strip().split() for line in open(config.training,'r')]
+    self.train_lens = [len(v) for v in self.train]
     if test:
       self.valid = [line.strip().split() for line in open(config.testing,'r')]
     else:
       self.valid = [line.strip().split() for line in open(config.validation,'r')]
+    self.valid_lens = [len(v) for v in self.valid]
+
 
     # Sanity check formatting of the input data
     for vals in self.train:
@@ -23,7 +27,8 @@ class data:
             sys.exit()
 
     # Build Training Data
-    strs, inputs, outputs = self.process(self.train, config.acids, config.lbls)
+    strs, inputs, outputs, lens = self.process(self.train, config.acids, config.lbls)
+    inputs = self.pad_data(inputs)
 
     print("Training counts\t")
     l_c = defaultdict(int) 
@@ -47,7 +52,8 @@ class data:
     strs = np.array(strs)
 
     # Build Validation Data
-    t_strs, t_inps, t_outs = self.process(self.valid, config.acids, config.lbls)
+    t_strs, t_inps, t_outs, t_lens = self.process(self.valid, config.acids, config.lbls)
+    t_inps = self.pad_data(t_inps)
     #t_inps, t_outs, t_strs = self.sort_data(t_inps, t_outs, t_strs)
     #t_outs = np.array(t_outs)
     #t_strs = np.array(t_strs)
@@ -58,8 +64,10 @@ class data:
     print("Validation  Outs: ", t_outs.shape)
     print("Labels\t", config.lbls)
 
-    self.training = DataLoader(list(zip(inputs, outputs, strs)), shuffle=True)
-    self.validate = DataLoader(list(zip(t_inps, t_outs, t_strs)), shuffle=False)
+    self.training = DataLoader(list(zip(inputs, lens, outputs, strs)), shuffle=True, 
+                               batch_size=config.batch_size)
+    self.validate = DataLoader(list(zip(t_inps, t_lens, t_outs, t_strs)), shuffle=False,
+                               batch_size=config.batch_size)
 
 
   ##############################################################################
@@ -73,7 +81,8 @@ class data:
       strs = np.array([sequence for label, sequence in data])
       inps = [self.to_int(sequence, acids) for label, sequence in data]
       outs = np.array([lbls[label] for label, sequence in data])
-      return strs, inps, outs
+      lens = [len(v) for v in inps]
+      return strs, inps, outs, lens
 
   def to_int(self, seq, acids):
       """   Map AA sequence to integers  """
@@ -118,4 +127,3 @@ class data:
           padded_i[i, :len(inputs[i])] = np.copy(inputs[i])
 
       return padded_i
-

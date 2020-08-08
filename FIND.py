@@ -48,14 +48,20 @@ if not args.evaluate:
   #############################################################################
   ##    Training Loop
   #############################################################################
+
+  
+  gold_counts = np.zeros(config.num_labels)
+  pred_counts = np.zeros(config.num_labels)
+  corr_counts = np.zeros(config.num_labels)
+
   prev_acc = 0
   prev_loss = 1e100
   for epoch in range(0, config.epochs + 1):
       total_loss = 0.0
       train_acc = []
-      net.reset_counts(epoch)
 
-      for inps, outs, _ in tqdm(data.training, ncols=80):
+      for datum in tqdm(data.training, ncols=80):
+          inps, lens, outs, _ = datum
           # Setup
           optimizer.zero_grad()
           inputs = inps.to(config.device)
@@ -77,11 +83,12 @@ if not args.evaluate:
           dists = full.permute(0,2,1).cpu().data.numpy()
       
           preds = preds.data.cpu().numpy()
-          np.add.at(net.pred_counts, preds, 1)
-          np.add.at(net.gold_counts, outs[r], 1)
-          np.add.at(net.corr_counts, preds[preds == outs[r]], 1)
+
+          np.add.at(pred_counts, preds, 1)
+          np.add.at(gold_counts, outs, 1)
+          np.add.at(corr_counts, preds[preds == outs.numpy()], 1)
   
-          train_acc.extend(list(preds == outs[r]))
+          train_acc.extend(list(preds == outs.numpy()))
     
       # Evaluate on validation (during training)
       val_loss, val_acc = run_evaluation(net, data.validate, 

@@ -19,6 +19,7 @@ class Net(nn.Module):
         self.config = config
     
         self.embedding = nn.Embedding(config.input_dim, config.hidden_dim)
+        self.embedding.weight.data[0] = torch.zeros(config.hidden_dim)
         layers = [
           nn.Conv1d(config.hidden_dim, config.hidden_dim, self.width),
           nn.ReLU(),
@@ -60,12 +61,6 @@ class Net(nn.Module):
         att = F.softmax(torch.squeeze(att), dim=-1)
 
         return collapsed, att, logits
-
-    def reset_counts(self, epoch):
-        self.gold_counts = np.zeros(self.config.num_labels)
-        self.pred_counts = np.zeros(self.config.num_labels)
-        self.corr_counts = np.zeros(self.config.num_labels)
-        self.epoch = epoch
 
     def loss(self, logits, labels, weight):
         if self.config.reweight:
