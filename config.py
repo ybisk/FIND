@@ -63,8 +63,9 @@ class config:
   def pretty(self):
     run = str(int(time.time()))
     run += "_binary" if self.binary is not None else "_multi"
-    run += "_{}_e{}_h{}_b{}".format(self.name, self.epochs, 
-                                    self.hidden_dim, self.batch_size)
+    run += "_{}_e{}_h{}_b{}_lr{}".format(self.name, self.epochs, 
+                                         self.hidden_dim, self.batch_size,
+                                         self.lr)
     if self.reweight:
         run += "_reweight"
     return run
@@ -114,5 +115,5 @@ class config:
             else:
                 self.lbls[v] = 0
                 self.ilbls[self.lbls[v]] = "OTHER"
-        print(self.lbls, self.ilbls)
+        #print(self.lbls, self.ilbls)
         self.num_labels = 2

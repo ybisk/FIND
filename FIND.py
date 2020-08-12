@@ -11,12 +11,12 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--type", type=str, default="HCO", help="HCO, NITRO, BD")
-parser.add_argument("--epochs", type=int, default=100)
+parser.add_argument("--epochs", type=int, default=200)
 parser.add_argument("--batch_size", type=int, default=32)
 parser.add_argument("--hidden_dim", type=int, default=256)
 parser.add_argument("--lr", type=float)
 parser.add_argument("--evaluate", action='store_true')
-parser.add_argument("--test", action='store_true')
+parser.add_argument("--test", type=str, default="valid", help="train, test, valid")
 parser.add_argument("--model", type=str)
 args = parser.parse_args()
 

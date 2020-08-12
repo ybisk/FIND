@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from collections import defaultdict
 
 class data:
-  def __init__(self, config, test=False):
+  def __init__(self, config, test="valid", verbose=False):
     ############################################################################
     ## Data is loaded, Train/Validation/Test, counted, converted to numbers and 
     ## stored in numpy arrays.
@@ -13,10 +13,12 @@ class data:
     """ Data & Parameters """
     self.train = [line.strip().split() for line in open(config.training,'r')]
     self.train_lens = [len(v) for v in self.train]
-    if test:
+    if test == "valid":
+      self.valid = [line.strip().split() for line in open(config.validation,'r')]
+    elif test == "test":
       self.valid = [line.strip().split() for line in open(config.testing,'r')]
     else:
-      self.valid = [line.strip().split() for line in open(config.validation,'r')]
+      self.valid = self.train
     self.valid_lens = [len(v) for v in self.valid]
 
 
@@ -30,14 +32,16 @@ class data:
     strs, inputs, outputs, lens = self.process(self.train, config.acids, config.lbls)
     inputs = self.pad_data(inputs)
 
-    print("Training counts\t")
+    if verbose:
+      print("Training counts\t")
     l_c = defaultdict(int) 
     for v in outputs:
         l_c[config.ilbls[v]] += 1
     V = [(l_c[v],v) for v in l_c]
     V.sort()
     V.reverse()
-    print("    ".join(["{}: {}".format(lbl, cnt) for cnt,lbl in V]))
+    if verbose:
+      print("    ".join(["{}: {}".format(lbl, cnt) for cnt,lbl in V]))
 
     count = np.zeros(len(config.ilbls), dtype=np.float32)
 
@@ -54,15 +58,13 @@ class data:
     # Build Validation Data
     t_strs, t_inps, t_outs, t_lens = self.process(self.valid, config.acids, config.lbls)
     t_inps = self.pad_data(t_inps)
-    #t_inps, t_outs, t_strs = self.sort_data(t_inps, t_outs, t_strs)
-    #t_outs = np.array(t_outs)
-    #t_strs = np.array(t_strs)
 
-    print("Training    Inps: ", len(inputs))
-    print("Training    Outs: ", outputs.shape)
-    print("Validation  Inps: ", len(t_inps))
-    print("Validation  Outs: ", t_outs.shape)
-    print("Labels\t", config.lbls)
+    if verbose:
+      print("Training    Inps: ", len(inputs))
+      print("Training    Outs: ", outputs.shape)
+      print("Validation  Inps: ", len(t_inps))
+      print("Validation  Outs: ", t_outs.shape)
+      print("Labels\t", config.lbls)
 
     self.training = DataLoader(list(zip(inputs, lens, outputs, strs)), shuffle=True, 
                                batch_size=config.batch_size)
