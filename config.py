@@ -9,12 +9,13 @@ class config:
       self._nitro() 
     elif args.type == "BD":
       self._bd() 
+    elif args.type == "CUSTOM":
+      self._custom()
     else:
       raise Exception("Invalid category: {}".format(category))
       
     self.binary     = None                       # Binary classifer based on argument'
     self.reweight   = False                      # Balance class distribution
-    self.test       = False                      # Swap validation for test set
     self.load       = None                       # Load model
     self.confusion  = False                      # If test, generate confusion matrix
     self.pconfusion = False                      # sum probabilities for confusion
@@ -34,6 +35,14 @@ class config:
 
     # Use a GPU when possible
     self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+  def _custom(self):
+    self.name       = "custom"                   # prefix for models/logs
+    self.label_file = "data/custom.labels.txt"   # Classes
+    self.training   = "data/custom.labeled.train"# file location
+    self.validation = "data/custom.labeled.val"  # file location
+    self.testing    = "data/custom.labeled.test" # file location
+    self.lr         = 5e-3                       # learning rate
 
   def _hco(self):
     self.name       = "hco"                      # prefix for models/logs
