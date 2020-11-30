@@ -1,0 +1,6 @@
+nifDI	125
+nifDII	325
+AnfD	12
+VnfD	17
+nifDIII	35
+nifDIV	3
