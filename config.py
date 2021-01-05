@@ -3,7 +3,8 @@ import time
 
 class config:
   def __init__(self, args):
-    if args.type == "HCO":
+
+    if args is None or args.type == "HCO":
       self._hco() 
     elif args.type == "NITRO":
       self._nitro() 
@@ -24,7 +25,7 @@ class config:
     self.hidden_dim = args.hidden_dim            # Hidden dim
     self.batch_size = args.batch_size            # Batch size
     self.seed       = args.seed                  # Random Seed
-    if args.lr is not None:
+    if args is not None and args.lr is not None:
       self.lr = args.lr                          # Learning rate
     
 
