@@ -21,12 +21,20 @@ class config:
     self.confusion  = False                      # If test, generate confusion matrix
     self.pconfusion = False                      # sum probabilities for confusion
     self.log        = "./logs/"                  # Directory for logs
-    self.epochs     = args.epochs                # Number of training epochs
-    self.hidden_dim = args.hidden_dim            # Hidden dim
-    self.batch_size = args.batch_size            # Batch size
-    self.seed       = args.seed                  # Random Seed
-    if args is not None and args.lr is not None:
-      self.lr = args.lr                          # Learning rate
+
+    if args is not None:
+      self.epochs     = args.epochs             # Number of training epochs
+      self.hidden_dim = args.hidden_dim         # Hidden dim
+      self.batch_size = args.batch_size         # Batch size
+      self.seed       = args.seed               # Random Seed
+      if args.lr is not None:
+        self.lr = args.lr                       # Learning rate
+    else:
+      self.epochs     = 500                     # Number of training epochs
+      self.hidden_dim = 512                     # Hidden dim
+      self.batch_size = 32                      # Batch size
+      self.seed       = 7                       # Random Seed
+      self.lr = 1e-4                            # Learning rate
     
 
     # Dictionary of acids and labels
