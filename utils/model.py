@@ -21,14 +21,14 @@ class Net(nn.Module):
         self.embedding = nn.Embedding(config.input_dim, config.hidden_dim, padding_idx=0)
         layers = [
           nn.Conv1d(config.hidden_dim, config.hidden_dim, self.width),
-          nn.ReLU(),
           nn.BatchNorm1d(config.hidden_dim),
+          nn.ReLU(),
           nn.Conv1d(config.hidden_dim, config.hidden_dim, self.width*2),
-          nn.ReLU(),
           nn.BatchNorm1d(config.hidden_dim),
+          nn.ReLU(),
           nn.Conv1d(config.hidden_dim, config.hidden_dim, self.width*4),
-          nn.ReLU(),
           nn.BatchNorm1d(config.hidden_dim),
+          nn.ReLU(),
           nn.Conv1d(config.hidden_dim, config.hidden_dim, 1),
           nn.ReLU(),
           nn.Conv1d(config.hidden_dim, config.hidden_dim, 1),
