@@ -14,6 +14,7 @@ parser.add_argument("--type", type=str, default="HCO", help="HCO, NITRO, BD")
 parser.add_argument("--epochs", type=int, default=200)
 parser.add_argument("--batch_size", type=int, default=32)
 parser.add_argument("--hidden_dim", type=int, default=256)
+parser.add_argument("--seed", type=int, default=7)
 parser.add_argument("--lr", type=float)
 parser.add_argument("--evaluate", action='store_true')
 parser.add_argument("--test", type=str, default="valid", help="train, test, valid")
@@ -22,7 +23,7 @@ args = parser.parse_args()
 
 np.seterr(divide='ignore')             # Ignore divide by zero errors
 np.warnings.filterwarnings('ignore')
-torch.cuda.manual_seed(20180119)       # <-- set a value for consistency
+torch.cuda.manual_seed(args.seed)       # <-- set a value for consistency
 
 # Load network architecture
 from utils.model import Net
@@ -49,14 +50,12 @@ if not args.evaluate:
   ##    Training Loop
   #############################################################################
 
-  
-  gold_counts = np.zeros(config.num_labels)
-  pred_counts = np.zeros(config.num_labels)
-  corr_counts = np.zeros(config.num_labels)
-
   prev_acc = 0
   prev_loss = 1e100
   for epoch in range(0, config.epochs + 1):
+      gold_counts = np.zeros(config.num_labels)
+      pred_counts = np.zeros(config.num_labels)
+      corr_counts = np.zeros(config.num_labels)
       total_loss = 0.0
       train_acc = []
 
@@ -104,9 +103,9 @@ if not args.evaluate:
           pref = config.name
           torch.save(net, "{}.model".format(config.run_name))
       
-      if abs(prev_loss - total_loss)/total_loss < 0.01:
-          print("Converged")
-          break
+      #if abs(prev_loss - total_loss)/total_loss < 0.0001:
+      #    print("Converged")
+      #    break
       prev_loss = total_loss
 
 else:

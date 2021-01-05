@@ -23,6 +23,7 @@ class config:
     self.epochs     = args.epochs                # Number of training epochs
     self.hidden_dim = args.hidden_dim            # Hidden dim
     self.batch_size = args.batch_size            # Batch size
+    self.seed       = args.seed                  # Random Seed
     if args.lr is not None:
       self.lr = args.lr                          # Learning rate
     
@@ -72,9 +73,9 @@ class config:
   def pretty(self):
     run = str(int(time.time()))
     run += "_binary" if self.binary is not None else "_multi"
-    run += "_{}_e{}_h{}_b{}_lr{}".format(self.name, self.epochs, 
-                                         self.hidden_dim, self.batch_size,
-                                         self.lr)
+    run += "_{}_e{}_h{}_b{}_lr{}_seed{}".format(self.name, self.epochs, 
+                                                self.hidden_dim, self.batch_size,
+                                                self.lr, self.seed)
     if self.reweight:
         run += "_reweight"
     return run
